@@ -106,8 +106,8 @@
                 <i class="fas fa-plug"></i> App Connection Hub
             </button>
             <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer">
-                <i class="fas fa-plus"></i> Add Custom Sound
-                <input type="file" id="sound-upload" accept="audio/*" class="hidden">
+                <i class="fas fa-plus"></i> Add Audio
+                <input type="file" id="audio-upload" accept="audio/*" class="hidden">
             </label>
         </div>
     </header>
@@ -120,24 +120,24 @@
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-3 flex-grow">
                     <i class="fas fa-volume-down text-gray-400"></i>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5" class="w-full">
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-full">
                     <i class="fas fa-volume-up text-[#e94560]"></i>
                 </div>
                 <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition active:scale-95 flex items-center gap-2 text-sm whitespace-nowrap">
-                    <i class="fas fa-stop"></i> STOP ALL
+                    <i class="fas fa-stop"></i> STOP ALL (Space)
                 </button>
             </div>
 
             <!-- Middle: Device Selection -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <div class="flex-grow">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Mic Input (Relay)</label>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Mic Input (Used by your apps)</label>
                     <select id="mic-select" class="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md p-2 focus:border-[#e94560] outline-none transition-colors">
                         <option value="">Default Microphone</option>
                     </select>
                 </div>
                 <div class="flex-grow">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Target Output (Virtual Cable)</label>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Output (Virtual Link)</label>
                     <select id="output-select" class="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md p-2 focus:border-[#e94560] outline-none transition-colors">
                         <option value="">Default Output</option>
                     </select>
@@ -170,7 +170,7 @@
             <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
                 <div>
                     <h2 class="retro-font text-[#e94560] text-xl">App Connection Hub</h2>
-                    <p class="text-xs text-gray-500 mt-1">Status: Scanning for audio pathways...</p>
+                    <p class="text-xs text-gray-500 mt-1">Status: Scanning for active audio streams...</p>
                 </div>
                 <button onclick="toggleModal('app-hub')" class="text-gray-500 hover:text-white transition-colors"><i class="fas fa-times text-2xl"></i></button>
             </div>
@@ -198,14 +198,36 @@
                     </div>
                     <div class="h-3 w-3 rounded-full bg-gray-600" id="roblox-indicator"></div>
                 </div>
+                <!-- Voicemod -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-voicemod">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-robot text-3xl text-cyan-400"></i>
+                        <div>
+                            <p class="font-bold text-sm">Voicemod</p>
+                            <p class="text-[10px] text-gray-400" id="voicemod-status">Checking driver...</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-gray-600" id="voicemod-indicator"></div>
+                </div>
+                <!-- Browser -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-browser">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-globe text-3xl text-emerald-400"></i>
+                        <div>
+                            <p class="font-bold text-sm">Chrome/Edge</p>
+                            <p class="text-[10px] text-gray-400">Default Sandbox</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-emerald-500"></div>
+                </div>
             </div>
 
             <div class="bg-blue-900/20 border border-blue-800 p-4 rounded-xl">
-                <h4 class="text-blue-400 font-bold text-sm mb-2"><i class="fas fa-info-circle mr-2"></i>Virtual Link Guide</h4>
-                <p class="text-xs text-gray-400 leading-relaxed mb-3">To route sounds to other apps: Set your <b>Output</b> to a Virtual Cable, then go to the Target App (Discord) and set its <b>Microphone</b> to that same Virtual Cable.</p>
+                <h4 class="text-blue-400 font-bold text-sm mb-2"><i class="fas fa-info-circle mr-2"></i>Automated Link Protocol</h4>
+                <p class="text-xs text-gray-400 leading-relaxed mb-3">To link to these apps, the soundboard detects your <b>Input Source</b>. If you see a green indicator above, the soundboard has identified the microphone being used by that app.</p>
                 <div class="space-y-2">
                     <button onclick="autoMatchDevices()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-xs uppercase tracking-tighter transition-all">
-                        Auto-Sync Virtual Cable
+                        Auto-Sync to Active Microphone
                     </button>
                 </div>
             </div>
@@ -237,24 +259,13 @@
         const micSelect = document.getElementById('mic-select');
         const outputSelect = document.getElementById('output-select');
         const refreshBtn = document.getElementById('refresh-devices');
-        const uploadInput = document.getElementById('sound-upload');
+        const audioUpload = document.getElementById('audio-upload');
 
         let activeAudios = [];
         let globalVolume = 0.5;
         let isMicEnabled = false;
         let isMonitoring = false;
         let audioCtx, micStream, micNode;
-
-        // Initialize App
-        function init() {
-            renderGrid();
-            updateDeviceLists();
-            
-            // Check for setSinkId Support
-            if (!HTMLMediaElement.prototype.setSinkId) {
-                showToast("Note: This browser cannot route audio to specific devices. Try Chrome/Edge.");
-            }
-        }
 
         function toggleModal(id) {
             const m = document.getElementById(id);
@@ -264,29 +275,18 @@
 
         async function updateDeviceLists() {
             try {
-                // Requesting permission early helps populate labels
-                if (!micStream) await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
-                
+                await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 micSelect.innerHTML = '<option value="">Default Microphone</option>';
-                outputSelect.innerHTML = '<option value="">Default Output</option>';
-                
+                outputSelect.innerHTML = '<option value="">Default (System Default)</option>';
                 devices.forEach(device => {
-                    if (device.kind === 'audioinput') {
-                        const opt = document.createElement('option');
-                        opt.value = device.deviceId;
-                        opt.text = device.label || `Microphone ${micSelect.length}`;
-                        micSelect.appendChild(opt);
-                    } else if (device.kind === 'audiooutput') {
-                        const opt = document.createElement('option');
-                        opt.value = device.deviceId;
-                        opt.text = device.label || `Output ${outputSelect.length}`;
-                        outputSelect.appendChild(opt);
-                    }
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || `${device.kind}`;
+                    if (device.kind === 'audioinput') micSelect.appendChild(opt);
+                    else if (device.kind === 'audiooutput') outputSelect.appendChild(opt);
                 });
-            } catch (err) {
-                showToast("Device scan failed.");
-            }
+            } catch (err) { showToast("Audio permissions required"); }
         }
 
         async function scanForApps() {
@@ -301,55 +301,51 @@
 
                 if (found) {
                     card.classList.add('detected');
-                    status.textContent = "Potential Link Found";
+                    status.textContent = "Driver Detected / Active";
                     indicator.classList.remove('bg-gray-600');
                     indicator.classList.add('bg-emerald-500');
                 } else {
                     card.classList.remove('detected');
-                    status.textContent = "No driver found";
+                    status.textContent = "Not found in audio path";
                     indicator.classList.add('bg-gray-600');
                     indicator.classList.remove('bg-emerald-500');
                 }
             };
 
-            check(['discord'], 'discord');
-            check(['roblox'], 'roblox');
+            check(['discord', 'certified'], 'discord');
+            check(['roblox', 'hyperion'], 'roblox');
+            check(['voicemod', 'vbox', 'virtual'], 'voicemod');
         }
 
         async function autoMatchDevices() {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const target = devices.find(d => 
-                d.kind === 'audiooutput' && 
-                (d.label.toLowerCase().includes('cable') || d.label.toLowerCase().includes('virtual'))
+                d.label.toLowerCase().includes('cable') || 
+                d.label.toLowerCase().includes('voicemod') ||
+                d.label.toLowerCase().includes('virtual')
             );
 
-            if (target) {
+            if (target && target.kind === 'audiooutput') {
                 outputSelect.value = target.deviceId;
-                showToast(`Auto-linked to: ${target.label}`);
+                showToast(`Linked to ${target.label}`);
+                toggleModal('app-hub');
             } else {
-                showToast("No Virtual Cables detected.");
+                showToast("No Virtual Link detected. Install VB-CABLE!");
             }
         }
 
         async function toggleMic() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
             if (!isMicEnabled) {
                 try {
                     const constraints = { audio: micSelect.value ? { deviceId: { exact: micSelect.value } } : true };
                     micStream = await navigator.mediaDevices.getUserMedia(constraints);
                     micNode = audioCtx.createMediaStreamSource(micStream);
-                    
-                    // We connect it to the destination so it routes to whatever 'Default' system output is
-                    // or we'd need to use a complex audio routing if we want the mic to follow the Output Select.
                     micNode.connect(audioCtx.destination);
-                    
                     isMicEnabled = true;
                     micBtn.classList.add('status-active');
                     document.getElementById('mic-text').textContent = "RELAY ON";
-                } catch (err) {
-                    showToast("Could not start Mic Relay.");
-                }
+                } catch (err) { showToast("Mic connection failed"); }
             } else {
                 if (micStream) micStream.getTracks().forEach(t => t.stop());
                 if (micNode) micNode.disconnect();
@@ -361,133 +357,95 @@
 
         async function playSound(soundData, btn) {
             btn.classList.add('playing');
-            
-            // Create audio element
             const audio = new Audio(soundData.url);
             audio.volume = globalVolume;
-
-            // Route to Virtual Cable if selected
-            if (outputSelect.value && audio.setSinkId) {
-                try {
-                    await audio.setSinkId(outputSelect.value);
-                } catch (e) {
-                    console.error("SinkId routing failed", e);
-                }
-            }
-
+            if (outputSelect.value && audio.setSinkId) await audio.setSinkId(outputSelect.value);
             activeAudios.push(audio);
             audio.play();
-
-            // Monitoring (Play through speakers too so you hear what you're playing)
-            if (isMonitoring && outputSelect.value !== "") {
-                const mon = new Audio(soundData.url);
-                mon.volume = globalVolume;
-                mon.play();
-            }
-
             audio.onended = () => {
                 btn.classList.remove('playing');
                 activeAudios = activeAudios.filter(a => a !== audio);
             };
+            
+            if (isMonitoring && outputSelect.value) {
+                const mon = new Audio(soundData.url);
+                mon.volume = globalVolume;
+                mon.play();
+            }
         }
 
         function renderGrid() {
             grid.innerHTML = '';
-            sounds.forEach((s, index) => {
+            sounds.forEach(s => {
                 const btn = document.createElement('button');
-                btn.className = `sound-btn h-32 w-full rounded-xl border-2 flex flex-col items-center justify-center gap-2 bg-gray-800 transition-colors ${s.color || 'border-gray-500 text-white'}`;
-                
-                // Show index if < 10 for hotkeys
-                const hotkeyLabel = index < 9 ? `<span class="absolute top-2 left-2 text-[9px] opacity-40">Key: ${index + 1}</span>` : '';
-                
-                btn.innerHTML = `
-                    ${hotkeyLabel}
-                    <span class="text-4xl">${s.emoji}</span>
-                    <span class="font-bold text-[11px] uppercase text-center px-2">${s.name}</span>
-                `;
-                
+                btn.className = `sound-btn h-32 w-full rounded-xl border-2 flex flex-col items-center justify-center gap-2 bg-gray-800 transition-colors ${s.color}`;
+                btn.innerHTML = `<span class="text-4xl">${s.emoji}</span><span class="font-bold text-[11px] uppercase">${s.name}</span>`;
                 btn.onclick = () => playSound(s, btn);
-                // Right-click to stop just this sound
-                btn.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    stopSpecificSound(s.url);
-                };
-                
                 grid.appendChild(btn);
             });
         }
 
-        function stopSpecificSound(url) {
-            activeAudios.forEach(a => {
-                if (a.src === url) {
-                    a.pause();
-                    a.currentTime = 0;
-                }
-            });
-            activeAudios = activeAudios.filter(a => a.src !== url);
-        }
-
-        // Custom Sound Upload
-        uploadInput.addEventListener('change', (e) => {
+        audioUpload.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
-                const url = URL.createObjectURL(file);
-                const newSound = {
-                    id: `custom-${Date.now()}`,
-                    name: file.name.split('.')[0].substring(0, 15),
-                    emoji: '📁',
-                    url: url,
-                    color: 'border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const newSound = {
+                        id: Date.now(),
+                        name: file.name.split('.')[0].substring(0, 12),
+                        emoji: '📁',
+                        url: event.target.result,
+                        color: 'border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
+                    };
+                    sounds.push(newSound);
+                    renderGrid();
+                    showToast(`Added: ${newSound.name}`);
                 };
-                sounds.push(newSound);
-                renderGrid();
-                showToast("Sound added!");
+                reader.readAsDataURL(file);
             }
-        });
+        };
 
-        // Global Stop
-        stopBtn.onclick = () => {
+        const stopAllSounds = () => {
             activeAudios.forEach(a => { a.pause(); a.currentTime = 0; });
             activeAudios = [];
             document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('playing'));
         };
 
-        // Keyboard Hotkeys
-        window.addEventListener('keydown', (e) => {
-            const key = parseInt(e.key);
-            if (key >= 1 && key <= 9 && key <= sounds.length) {
-                const btn = grid.children[key - 1];
-                playSound(sounds[key - 1], btn);
-            }
-            if (e.key === 'Escape' || e.key === 's') {
-                stopBtn.click();
-            }
-        });
-
-        // Volume Control
-        volumeSlider.oninput = (e) => {
-            globalVolume = e.target.value;
-            activeAudios.forEach(a => a.volume = globalVolume);
-        };
-
-        // Monitoring Toggle
+        micBtn.onclick = toggleMic;
         monitorBtn.onclick = () => {
             isMonitoring = !isMonitoring;
             monitorBtn.classList.toggle('status-active', isMonitoring);
             document.getElementById('monitor-text').textContent = isMonitoring ? "MONITOR ON" : "MONITOR OFF";
         };
-
-        micBtn.onclick = toggleMic;
         refreshBtn.onclick = updateDeviceLists;
+        volumeSlider.oninput = (e) => {
+            globalVolume = e.target.value;
+            activeAudios.forEach(a => a.volume = globalVolume);
+        };
+        stopBtn.onclick = stopAllSounds;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                    e.preventDefault();
+                    stopAllSounds();
+                    stopBtn.classList.add('scale-95');
+                    setTimeout(() => stopBtn.classList.remove('scale-95'), 100);
+                }
+            }
+        });
 
         function showToast(m) {
             const t = document.getElementById('toast');
-            t.textContent = m;
+            t.textContent = m; 
             t.classList.remove('translate-y-20');
             setTimeout(() => t.classList.add('translate-y-20'), 3000);
         }
 
-        window.onload = init;
+        window.onload = () => {
+            updateDeviceLists();
+            renderGrid();
+        };
     </script>
 </body>
 </html>
