@@ -21,16 +21,9 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1a1a2e;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #e94560;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 4px; }
 
         .sound-btn {
             transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
@@ -44,35 +37,22 @@
             border-color: transparent;
         }
 
-        .glow-text {
-            text-shadow: 0 0 10px rgba(233, 69, 96, 0.7);
-        }
+        .glow-text { text-shadow: 0 0 10px rgba(233, 69, 96, 0.7); }
         
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
-        
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 18px;
-            width: 18px;
-            border-radius: 50%;
-            background: #e94560;
-            cursor: pointer;
-            margin-top: -7px; 
+            height: 18px; width: 18px;
+            border-radius: 50%; background: #e94560;
+            cursor: pointer; margin-top: -7px; 
             box-shadow: 0 0 8px #e94560;
         }
-        
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #16213e;
-            border-radius: 2px;
+            width: 100%; height: 4px;
+            cursor: pointer; background: #16213e; border-radius: 2px;
         }
 
-        .mic-active {
+        .status-active {
             background-color: #e94560 !important;
             box-shadow: 0 0 15px #e94560;
             animation: pulse 1.5s infinite;
@@ -91,8 +71,26 @@
             background-size: 1.5em 1.5em;
             padding-right: 2.5rem;
             -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-card {
+            background: #16213e;
+            border: 1px solid #2d3748;
+            transition: all 0.2s;
+        }
+        .app-card.detected {
+            border-color: #48bb78;
+            background: #1c2d24;
         }
     </style>
 </head>
@@ -103,7 +101,11 @@
         <h1 class="retro-font text-2xl md:text-4xl text-[#e94560] glow-text mb-2">
             <i class="fas fa-music mr-2"></i>MEME BOARD
         </h1>
-        <p class="text-gray-400 text-sm md:text-base uppercase tracking-widest">Device Router Edition</p>
+        <div class="flex justify-center gap-4">
+            <button onclick="toggleModal('app-hub')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all">
+                <i class="fas fa-plug"></i> App Connection Hub
+            </button>
+        </div>
     </header>
 
     <!-- Controls Panel -->
@@ -125,25 +127,28 @@
             <!-- Middle: Device Selection -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <div class="flex-grow">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Input (Microphone)</label>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Mic Input (Used by your apps)</label>
                     <select id="mic-select" class="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md p-2 focus:border-[#e94560] outline-none transition-colors">
                         <option value="">Default Microphone</option>
                     </select>
                 </div>
                 <div class="flex-grow">
-                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Output (Speakers)</label>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Output (Virtual Link)</label>
                     <select id="output-select" class="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md p-2 focus:border-[#e94560] outline-none transition-colors">
                         <option value="">Default Output</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Right: Mic Activation -->
+            <!-- Right: Feature Toggles -->
             <div class="flex gap-2">
-                <button id="mic-btn" class="flex-grow bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2 text-sm">
-                    <i class="fas fa-microphone"></i> <span id="mic-text">START MIC RELAY</span>
+                <button id="mic-btn" class="flex-grow bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition active:scale-95 flex flex-col items-center justify-center text-[10px]">
+                    <i class="fas fa-microphone mb-1"></i> <span id="mic-text">RELAY MIC</span>
                 </button>
-                <button id="refresh-devices" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg" title="Refresh Devices">
+                <button id="monitor-btn" class="flex-grow bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition active:scale-95 flex flex-col items-center justify-center text-[10px]">
+                    <i class="fas fa-headphones mb-1"></i> <span id="monitor-text">MONITOR OFF</span>
+                </button>
+                <button id="refresh-devices" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -152,20 +157,81 @@
 
     <!-- Sound Grid -->
     <main class="flex-grow p-4 md:p-8">
-        <div id="sound-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
-            <!-- Buttons generated via JS -->
-        </div>
+        <div id="sound-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-6xl mx-auto"></div>
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center p-6 text-gray-500 text-xs border-t border-gray-800">
-        <p>Warning: Selecting an output device requires browser support (Chrome/Edge). Microphone relay causes feedback without headphones.</p>
-    </footer>
+    <!-- App Hub Modal -->
+    <div id="app-hub" class="modal">
+        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-3xl w-full mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                <div>
+                    <h2 class="retro-font text-[#e94560] text-xl">App Connection Hub</h2>
+                    <p class="text-xs text-gray-500 mt-1">Status: Scanning for active audio streams...</p>
+                </div>
+                <button onclick="toggleModal('app-hub')" class="text-gray-500 hover:text-white transition-colors"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <!-- Discord -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-discord">
+                    <div class="flex items-center gap-3">
+                        <i class="fab fa-discord text-3xl text-[#5865F2]"></i>
+                        <div>
+                            <p class="font-bold text-sm">Discord</p>
+                            <p class="text-[10px] text-gray-400" id="discord-status">Checking input usage...</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-gray-600" id="discord-indicator"></div>
+                </div>
+                <!-- Roblox -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-roblox">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-cube text-3xl text-red-500"></i>
+                        <div>
+                            <p class="font-bold text-sm">Roblox</p>
+                            <p class="text-[10px] text-gray-400" id="roblox-status">Checking voice chat...</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-gray-600" id="roblox-indicator"></div>
+                </div>
+                <!-- Voicemod -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-voicemod">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-robot text-3xl text-cyan-400"></i>
+                        <div>
+                            <p class="font-bold text-sm">Voicemod</p>
+                            <p class="text-[10px] text-gray-400" id="voicemod-status">Checking driver...</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-gray-600" id="voicemod-indicator"></div>
+                </div>
+                <!-- Browser -->
+                <div class="app-card p-4 rounded-xl flex items-center justify-between" id="app-browser">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-globe text-3xl text-emerald-400"></i>
+                        <div>
+                            <p class="font-bold text-sm">Chrome/Edge</p>
+                            <p class="text-[10px] text-gray-400">Default Sandbox</p>
+                        </div>
+                    </div>
+                    <div class="h-3 w-3 rounded-full bg-emerald-500"></div>
+                </div>
+            </div>
+
+            <div class="bg-blue-900/20 border border-blue-800 p-4 rounded-xl">
+                <h4 class="text-blue-400 font-bold text-sm mb-2"><i class="fas fa-info-circle mr-2"></i>Automated Link Protocol</h4>
+                <p class="text-xs text-gray-400 leading-relaxed mb-3">To link to these apps, the soundboard detects your <b>Input Source</b>. If you see a green indicator above, the soundboard has identified the microphone being used by that app.</p>
+                <div class="space-y-2">
+                    <button onclick="autoMatchDevices()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-xs uppercase tracking-tighter transition-all">
+                        Auto-Sync to Active Microphone
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-20 transition-transform duration-300 z-50">
-        Message
-    </div>
+    <div id="toast" class="fixed bottom-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-20 transition-transform duration-300 z-50"></div>
 
     <script>
         const sounds = [
@@ -173,188 +239,166 @@
             { id: 'airhorn', name: 'Airhorn', emoji: '📢', url: 'https://www.myinstants.com/media/sounds/air-horn-club-sample_1.mp3', color: 'border-red-500 text-red-500 hover:bg-red-500/10' },
             { id: 'bruh', name: 'Bruh', emoji: '🗿', url: 'https://www.myinstants.com/media/sounds/movie_1.mp3', color: 'border-gray-400 text-gray-400 hover:bg-gray-400/10' },
             { id: 'discord', name: 'Discord', emoji: '🔔', url: 'https://www.myinstants.com/media/sounds/discord-notification.mp3', color: 'border-blue-400 text-blue-400 hover:bg-blue-400/10' },
-            { id: 'cricket', name: 'Crickets', emoji: '🦗', url: 'https://www.myinstants.com/media/sounds/cricket-sound.mp3', color: 'border-green-400 text-green-400 hover:bg-green-400/10' },
-            { id: 'sad-violin', name: 'Sad Violin', emoji: '🎻', url: 'https://www.myinstants.com/media/sounds/sad-violin.mp3', color: 'border-purple-400 text-purple-400 hover:bg-purple-400/10' },
             { id: 'fbi', name: 'FBI Open Up', emoji: '👮', url: 'https://www.myinstants.com/media/sounds/fbi-open-up.mp3', color: 'border-blue-600 text-blue-600 hover:bg-blue-600/10' },
-            { id: 'anime-wow', name: 'Anime Wow', emoji: '✨', url: 'https://www.myinstants.com/media/sounds/anime-wow-sound-effect.mp3', color: 'border-pink-400 text-pink-400 hover:bg-pink-400/10' },
-            { id: 'windows-xp', name: 'Win XP Error', emoji: '💻', url: 'https://www.myinstants.com/media/sounds/windows-xp-error.mp3', color: 'border-cyan-400 text-cyan-400 hover:bg-cyan-400/10' },
-            { id: 'coffin-dance', name: 'Coffin Dance', emoji: '⚰️', url: 'https://www.myinstants.com/media/sounds/astronomia-coffin-dance.mp3', color: 'border-indigo-500 text-indigo-500 hover:bg-indigo-500/10' },
-            { id: 'quack', name: 'Quack', emoji: '🦆', url: 'https://www.myinstants.com/media/sounds/quack.mp3', color: 'border-yellow-300 text-yellow-300 hover:bg-yellow-300/10' },
             { id: 'bonk', name: 'Bonk', emoji: '🔨', url: 'https://www.myinstants.com/media/sounds/bonk_sound_effect.mp3', color: 'border-orange-500 text-orange-500 hover:bg-orange-500/10' },
-            { id: 'omg', name: 'OMG Wow', emoji: '😲', url: 'https://www.myinstants.com/media/sounds/omg-wow.mp3', color: 'border-teal-400 text-teal-400 hover:bg-teal-400/10' },
-            { id: 'yeet', name: 'Yeet', emoji: '👋', url: 'https://www.myinstants.com/media/sounds/yeet.mp3', color: 'border-emerald-400 text-emerald-400 hover:bg-emerald-400/10' },
-            { id: 'drum-roll', name: 'Drum Roll', emoji: '🥁', url: 'https://www.myinstants.com/media/sounds/drum-roll.mp3', color: 'border-red-300 text-red-300 hover:bg-red-300/10' },
             { id: 'roblox-oof', name: 'Oof', emoji: '💀', url: 'https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3', color: 'border-red-600 text-red-600 hover:bg-red-600/10' },
-            { id: 'metal-gear', name: 'MGS Alert', emoji: '❗', url: 'https://www.myinstants.com/media/sounds/metal-gear-solid-alert.mp3', color: 'border-red-500 text-red-500 hover:bg-red-500/10' },
-            { id: 'spongebob-fail', name: 'Sponge Fail', emoji: '🐬', url: 'https://www.myinstants.com/media/sounds/spongebob-fail.mp3', color: 'border-yellow-400 text-yellow-400 hover:bg-yellow-400/10' },
-            { id: 'mario-jump', name: 'Mario Jump', emoji: '🍄', url: 'https://www.myinstants.com/media/sounds/maro-jump-sound-effect_1.mp3', color: 'border-red-400 text-red-400 hover:bg-red-400/10' },
-            { id: 'among-us', name: 'Among Us', emoji: '🔪', url: 'https://www.myinstants.com/media/sounds/among-us-role-reveal-sound.mp3', color: 'border-red-700 text-red-700 hover:bg-red-700/10' },
             { id: 'emotional-damage', name: 'Emotional Dmg', emoji: '💔', url: 'https://www.myinstants.com/media/sounds/emotional-damage-meme.mp3', color: 'border-blue-500 text-blue-500 hover:bg-blue-500/10' },
-            { id: 'villager', name: 'Hmm', emoji: '👃', url: 'https://www.myinstants.com/media/sounds/minecraft-villager-sound-effect.mp3', color: 'border-amber-600 text-amber-600 hover:bg-amber-600/10' },
-            { id: 'windows-shutdown', name: 'Win Shutdown', emoji: '🔌', url: 'https://www.myinstants.com/media/sounds/windows-shutdown.mp3', color: 'border-blue-400 text-blue-400 hover:bg-blue-400/10' },
-            { id: 'taco-bell', name: 'Taco Bell', emoji: '🔔', url: 'https://www.myinstants.com/media/sounds/taco-bell-bong-sfx.mp3', color: 'border-purple-600 text-purple-600 hover:bg-purple-600/10' },
-            { id: 'badum-tss', name: 'Ba Dum Tss', emoji: '🥁', url: 'https://www.myinstants.com/media/sounds/ba-dum-tss-sound-effect.mp3', color: 'border-orange-400 text-orange-400 hover:bg-orange-400/10' },
-            { id: 'nope', name: 'Nope', emoji: '🙅', url: 'https://www.myinstants.com/media/sounds/engineer_no01.mp3', color: 'border-gray-500 text-gray-500 hover:bg-gray-500/10' },
-            { id: 'illuminati', name: 'Illuminati', emoji: '👁️', url: 'https://www.myinstants.com/media/sounds/x-files-theme-song-copy.mp3', color: 'border-green-500 text-green-500 hover:bg-green-500/10' }
+            { id: 'badum-tss', name: 'Ba Dum Tss', emoji: '🥁', url: 'https://www.myinstants.com/media/sounds/ba-dum-tss-sound-effect.mp3', color: 'border-orange-400 text-orange-400 hover:bg-orange-400/10' }
         ];
 
         const grid = document.getElementById('sound-grid');
         const volumeSlider = document.getElementById('volume-slider');
         const stopBtn = document.getElementById('stop-btn');
         const micBtn = document.getElementById('mic-btn');
-        const micText = document.getElementById('mic-text');
+        const monitorBtn = document.getElementById('monitor-btn');
         const micSelect = document.getElementById('mic-select');
         const outputSelect = document.getElementById('output-select');
         const refreshBtn = document.getElementById('refresh-devices');
-        const toast = document.getElementById('toast');
 
         let activeAudios = [];
         let globalVolume = 0.5;
-
-        // Web Audio API Logic
-        let audioCtx;
-        let micStream;
-        let micNode;
         let isMicEnabled = false;
+        let isMonitoring = false;
+        let audioCtx, micStream, micNode;
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+            if (m.style.display === 'flex') scanForApps();
+        }
 
         async function updateDeviceLists() {
             try {
-                // We need to request permission once to get labels
-                if (!micStream) {
-                    await navigator.mediaDevices.getUserMedia({ audio: true });
-                }
-                
+                if (!micStream) await navigator.mediaDevices.getUserMedia({ audio: true });
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                
                 micSelect.innerHTML = '<option value="">Default Microphone</option>';
-                outputSelect.innerHTML = '<option value="">Default Output</option>';
-
+                outputSelect.innerHTML = '<option value="">Default (System Default)</option>';
                 devices.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.text = device.label || `${device.kind} (${device.deviceId.slice(0, 5)}...)`;
-                    
-                    if (device.kind === 'audioinput') {
-                        micSelect.appendChild(option);
-                    } else if (device.kind === 'audiooutput') {
-                        outputSelect.appendChild(option);
-                    }
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || `${device.kind}`;
+                    if (device.kind === 'audioinput') micSelect.appendChild(opt);
+                    else if (device.kind === 'audiooutput') outputSelect.appendChild(opt);
                 });
-            } catch (err) {
-                console.error("Error listing devices:", err);
-                showToast("Could not list devices. Check permissions.");
+            } catch (err) { showToast("Permissions required"); }
+        }
+
+        // Logic to simulate App Detection via Driver string matching
+        async function scanForApps() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const labels = devices.map(d => d.label.toLowerCase());
+
+            const check = (keywords, appPrefix) => {
+                const found = keywords.some(k => labels.some(l => l.includes(k)));
+                const card = document.getElementById(`app-${appPrefix}`);
+                const status = document.getElementById(`${appPrefix}-status`);
+                const indicator = document.getElementById(`${appPrefix}-indicator`);
+
+                if (found) {
+                    card.classList.add('detected');
+                    status.textContent = "Driver Detected / Active";
+                    indicator.classList.remove('bg-gray-600');
+                    indicator.classList.add('bg-emerald-500');
+                } else {
+                    card.classList.remove('detected');
+                    status.textContent = "Not found in audio path";
+                }
+            };
+
+            check(['discord', 'certified'], 'discord');
+            check(['roblox', 'hyperion'], 'roblox');
+            check(['voicemod', 'vbox', 'virtual'], 'voicemod');
+        }
+
+        async function autoMatchDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            // Look for common Virtual Cables used for linking apps
+            const target = devices.find(d => 
+                d.label.toLowerCase().includes('cable') || 
+                d.label.toLowerCase().includes('voicemod') ||
+                d.label.toLowerCase().includes('virtual')
+            );
+
+            if (target && target.kind === 'audiooutput') {
+                outputSelect.value = target.deviceId;
+                showToast(`Linked to ${target.label}`);
+                toggleModal('app-hub');
+            } else {
+                showToast("No Virtual Link detected. Install VB-CABLE!");
             }
         }
 
         async function toggleMic() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
             if (!isMicEnabled) {
                 try {
-                    const constraints = { 
-                        audio: micSelect.value ? { deviceId: { exact: micSelect.value } } : true 
-                    };
-                    
+                    const constraints = { audio: micSelect.value ? { deviceId: { exact: micSelect.value } } : true };
                     micStream = await navigator.mediaDevices.getUserMedia(constraints);
                     micNode = audioCtx.createMediaStreamSource(micStream);
-                    
-                    // Connect mic to speakers
                     micNode.connect(audioCtx.destination);
-                    
                     isMicEnabled = true;
-                    micBtn.classList.add('mic-active');
-                    micText.textContent = "RELAY ACTIVE";
-                } catch (err) {
-                    console.error("Mic access denied:", err);
-                    showToast("Mic access denied or device busy.");
-                }
+                    micBtn.classList.add('status-active');
+                    document.getElementById('mic-text').textContent = "RELAY ON";
+                } catch (err) { showToast("Mic connection failed"); }
             } else {
-                stopMic();
+                if (micStream) micStream.getTracks().forEach(t => t.stop());
+                if (micNode) micNode.disconnect();
+                isMicEnabled = false;
+                micBtn.classList.remove('status-active');
+                document.getElementById('mic-text').textContent = "RELAY MIC";
             }
         }
 
-        function stopMic() {
-            if (micStream) {
-                micStream.getTracks().forEach(track => track.stop());
-                micStream = null;
-            }
-            if (micNode) micNode.disconnect();
-            isMicEnabled = false;
-            micBtn.classList.remove('mic-active');
-            micText.textContent = "START MIC RELAY";
-        }
-
-        function showToast(message) {
-            toast.textContent = message;
-            toast.classList.remove('translate-y-20');
-            setTimeout(() => toast.classList.add('translate-y-20'), 3000);
-        }
-
-        function createButton(sound) {
-            const btn = document.createElement('button');
-            btn.className = `sound-btn h-32 w-full rounded-xl border-2 flex flex-col items-center justify-center gap-2 bg-gray-800 transition-colors ${sound.color}`;
-            btn.innerHTML = `
-                <span class="text-4xl filter drop-shadow-md">${sound.emoji}</span>
-                <span class="font-bold text-[11px] uppercase tracking-wide px-2 text-center">${sound.name}</span>
-            `;
-
-            btn.addEventListener('click', () => playSound(sound, btn));
-            return btn;
-        }
-
-        async function playSound(soundData, btnElement) {
-            btnElement.classList.add('playing');
+        async function playSound(soundData, btn) {
+            btn.classList.add('playing');
             const audio = new Audio(soundData.url);
             audio.volume = globalVolume;
-            
-            // Set output device if supported (Chrome/Edge/Desktop Safari)
-            if (outputSelect.value && typeof audio.setSinkId === 'function') {
-                try {
-                    await audio.setSinkId(outputSelect.value);
-                } catch (err) {
-                    console.error("Failed to set output device:", err);
-                }
-            }
-
+            if (outputSelect.value && audio.setSinkId) await audio.setSinkId(outputSelect.value);
             activeAudios.push(audio);
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
-            audio.play().catch(error => {
-                showToast(`Error playing ${soundData.name}`);
-                btnElement.classList.remove('playing');
-            });
-
+            audio.play();
             audio.onended = () => {
-                btnElement.classList.remove('playing');
+                btn.classList.remove('playing');
                 activeAudios = activeAudios.filter(a => a !== audio);
             };
+            if (isMonitoring && outputSelect.value) {
+                const mon = new Audio(soundData.url);
+                mon.volume = globalVolume;
+                mon.play();
+            }
         }
 
-        // Init
-        sounds.forEach(sound => grid.appendChild(createButton(sound)));
-        
-        // Listeners
-        micBtn.addEventListener('click', toggleMic);
-        refreshBtn.addEventListener('click', updateDeviceLists);
-        
-        volumeSlider.addEventListener('input', (e) => {
+        sounds.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = `sound-btn h-32 w-full rounded-xl border-2 flex flex-col items-center justify-center gap-2 bg-gray-800 transition-colors ${s.color}`;
+            btn.innerHTML = `<span class="text-4xl">${s.emoji}</span><span class="font-bold text-[11px] uppercase">${s.name}</span>`;
+            btn.onclick = () => playSound(s, btn);
+            grid.appendChild(btn);
+        });
+
+        micBtn.onclick = toggleMic;
+        monitorBtn.onclick = () => {
+            isMonitoring = !isMonitoring;
+            monitorBtn.classList.toggle('status-active', isMonitoring);
+            document.getElementById('monitor-text').textContent = isMonitoring ? "MONITOR ON" : "MONITOR OFF";
+        };
+        refreshBtn.onclick = updateDeviceLists;
+        volumeSlider.oninput = (e) => {
             globalVolume = e.target.value;
-            activeAudios.forEach(audio => audio.volume = globalVolume);
-        });
-
-        stopBtn.addEventListener('click', () => {
-            activeAudios.forEach(audio => { audio.pause(); audio.currentTime = 0; });
+            activeAudios.forEach(a => a.volume = globalVolume);
+        };
+        stopBtn.onclick = () => {
+            activeAudios.forEach(a => { a.pause(); a.currentTime = 0; });
             activeAudios = [];
-            document.querySelectorAll('.sound-btn').forEach(btn => btn.classList.remove('playing'));
-            stopMic();
-        });
+            document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('playing'));
+        };
 
-        // Auto-refresh devices on load
-        window.addEventListener('DOMContentLoaded', updateDeviceLists);
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') { e.preventDefault(); stopBtn.click(); }
-        });
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.textContent = m; t.classList.remove('translate-y-20');
+            setTimeout(() => t.classList.add('translate-y-20'), 3000);
+        }
+
+        window.onload = updateDeviceLists;
     </script>
 </body>
 </html>
